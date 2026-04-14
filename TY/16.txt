@@ -1,0 +1,149 @@
+include <stdio.h> 
+#include <stdlib.h> 
+#include <time.h> 
+#define MAX_BLOCKS 100 
+int disk[MAX_BLOCKS] = {0}; // 0 represents free block, 1 represents allocated block 
+void showBitVector(int n) { 
+printf("\nBit Vector (Disk Allocation):\n"); 
+for (int i = 0; i < n; i++) { 
+printf("%d ", disk[i]); 
+} 
+printf("\n"); 
+} 
+void showDirectory(int n) { 
+printf("\nDirectory Listing:\n"); 
+int start = -1; 
+for (int i = 0; i < n; i++) { 
+if (disk[i] == 1) { 
+if (start == -1) { 
+start = i; 
+} 
+} else { 
+            if (start != -1) { 
+                printf("File starting from block %d to %d\n", start, i - 1); 
+                start = -1; 
+            } 
+        } 
+    } 
+    if (start != -1) { 
+        printf("File starting from block %d to %d\n", start, n - 1); 
+    } 
+} 
+ 
+void deleteFile(int n) { 
+    int start; 
+    printf("\nEnter the starting block of the file to delete: "); 
+    scanf("%d", &start); 
+ 
+    if (start < 0 || start >= n || disk[start] == 0) { 
+        printf("\nInvalid starting block or the block is not allocated.\n"); 
+        return; 
+    } 
+ 
+    // Deallocate the blocks for the file 
+    while (start < n && disk[start] == 1) { 
+        disk[start] = 0; 
+        start++; 
+    } 
+ 
+    printf("\nFile deleted successfully.\n"); 
+} 
+ 
+int main() { 
+    int n; 
+ 
+    printf("Enter the number of blocks on the disk: "); 
+    scanf("%d", &n); 
+ 
+    srand(time(NULL)); // Seed for random block allocation 
+ 
+    // Randomly mark some blocks as allocated 
+    for (int i = 0; i < n; i++) { 
+        if (rand() % 2 == 1) { 
+            disk[i] = 1; 
+        } 
+    } 
+ 
+    int choice; 
+    do { 
+        printf("\nMenu:\n"); 
+        printf("1. Show Bit Vector\n"); 
+        printf("2. Show Directory\n"); 
+        printf("3. Delete File\n"); 
+        printf("4. Exit\n"); 
+        printf("Enter your choice: "); 
+        scanf("%d", &choice); 
+ 
+        switch (choice) { 
+            case 1: 
+                showBitVector(n); 
+                break; 
+ 
+            case 2: 
+                showDirectory(n); 
+                break; 
+ 
+            case 3: 
+                deleteFile(n); 
+                break; 
+ 
+            case 4: 
+                printf("\nExiting the program.\n"); 
+                break; 
+ 
+            default: 
+                printf("\nInvalid choice. Please enter a valid option.\n"); 
+        } 
+    } while (choice != 4); 
+ 
+    return 0; 
+} 
+
+
+
+
+
+
+
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <mpi.h> 
+ 
+#define ARRAY_SIZE 1000 
+ 
+int main(int argc, char *argv[]) { 
+    int rank, size; 
+    int i; 
+    int local_max = 0, global_max = 0; 
+ 
+    MPI_Init(&argc, &argv); 
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank); 
+    MPI_Comm_size(MPI_COMM_WORLD, &size); 
+ 
+    // Seed for random number generation based on rank 
+    srand(rank); 
+ 
+    // Generate local random numbers 
+    int local_numbers[ARRAY_SIZE / size]; 
+    for (i = 0; i < ARRAY_SIZE / size; i++) { 
+} 
+local_numbers[i] = rand() % 100; 
+// Find local max 
+for (i = 0; i < ARRAY_SIZE / size; i++) { 
+if (local_numbers[i] > local_max) { 
+local_max = local_numbers[i]; 
+} 
+} 
+// Find the global max using MPI_Reduce 
+MPI_Reduce(&local_max, &global_max, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD); 
+// Print results on rank 0 
+if (rank == 0) { 
+printf("Local max on each process:\n"); 
+for (i = 0; i < size; i++) { 
+printf("Process %d: %d\n", i, local_max); 
+} 
+printf("\nGlobal max: %d\n", global_max); 
+} 
+MPI_Finalize(); 
+return 0; 
+} 

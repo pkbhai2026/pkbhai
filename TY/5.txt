@@ -1,0 +1,119 @@
+#include <stdio.h>
+int main() {
+int m, n;
+printf("Enter number of processes (m): ");
+scanf("%d", &m);
+printf("Enter number of resource types (n): ");
+scanf("%d", &n);
+int allocation[m][n], max[m][n], need[m][n], available[n];
+int request[n], process;
+// Input Available resources for each resource type
+printf("Enter the number of available instances for each resource type: \n");
+for (int i = 0; i < n; i++) {
+printf("Resource %d: ", i + 1);
+scanf("%d", &available[i]);
+}
+// Input Allocation matrix
+printf("Enter the Allocation matrix:\n");
+for (int i = 0; i < m; i++) {
+printf("Process %d Allocation: ", i);
+for (int j = 0; j < n; j++) {
+scanf("%d", &allocation[i][j]);
+}
+}
+// Input Maximum requirement matrix
+printf("Enter the Maximum requirement matrix:\n");
+for (int i = 0; i < m; i++) {
+printf("Process %d Maximum: ", i);
+for (int j = 0; j < n; j++) {
+scanf("%d", &max[i][j]);
+}
+}
+// Calculate the Need matrix (Need = Max - Allocation)
+for (int i = 0; i < m; i++) {
+for (int j = 0; j < n; j++) {
+need[i][j] = max[i][j] - allocation[i][j];
+}
+}
+// Display the Need matrix
+printf("\nNeed Matrix:\n");
+for (int i = 0; i < m; i++) {
+for (int j = 0; j < n; j++) {
+printf("%d ", need[i][j]);
+}
+printf("\n");
+}
+// Accept a request from a process
+printf("\nEnter the process number making the request (0 to %d): ", m - 1);
+scanf("%d", &process);
+printf("Enter the resource request for process %d:\n", process);
+for (int i = 0; i < n; i++) {
+printf("Resource %d: ", i + 1);
+scanf("%d", &request[i]);
+}
+// Check if the request can be granted immediately
+int can_be_granted = 1;
+// Check if the request is less than the available resources
+for (int i = 0; i < n; i++) {
+if (request[i] > available[i]) {
+can_be_granted = 0;
+break;
+}
+}
+// Check if the request is less than the need for the process
+for (int i = 0; i < n; i++) {
+if (request[i] > need[process][i]) {
+can_be_granted = 0;
+break;
+}
+}
+if (can_be_granted) {
+printf("\nThe request can be granted immediately.\n");
+} else {
+printf("\nThe request cannot be granted immediately.\n");
+}
+return 0;
+}
+
+
+
+
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <mpi.h>
+#include <time.h>
+#define N 1000
+int main(int argc, char *argv[]) {
+int rank, size;
+int arr[N], local_max, global_max;
+int local_start, local_end;
+MPI_Init(&argc, &argv);
+MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+MPI_Comm_size(MPI_COMM_WORLD, &size);
+srand(time(NULL) + rank);
+int local_array_size = N / size;
+int local_array[local_array_size];
+if (rank == 0) {
+for (int i = 0; i < N; i++) {
+arr[i] = rand() % 1000;
+}
+}
+MPI_Scatter(arr, local_array_size, MPI_INT, local_array, local_array_size, MPI_INT, 
+0, MPI_COMM_WORLD);
+local_max = local_array[0];
+for (int i = 1; i < local_array_size; i++) {
+if (local_array[i] > local_max) {
+local_max = local_array[i];
+}
+}
+MPI_Reduce(&local_max, &global_max, 1, MPI_INT, MPI_MAX, 0,
+MPI_COMM_WORLD);
+if (rank == 0) {
+printf("The maximum value is %d\n", global_max);
+}
+MPI_Finalize();
+return 0;
+}

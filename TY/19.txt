@@ -1,0 +1,225 @@
+#include <stdio.h> 
+#include <stdbool.h> 
+#define MAX_PROCESSES 5 
+#define MAX_RESOURCES 4 
+int allocation[MAX_PROCESSES][MAX_RESOURCES]; 
+int max[MAX_PROCESSES][MAX_RESOURCES]; 
+int need[MAX_PROCESSES][MAX_RESOURCES]; 
+int available[MAX_RESOURCES]; 
+// Function to check if the current process can be executed 
+bool can_execute(int process_id) { 
+for (int i = 0; i < MAX_RESOURCES; i++) { 
+if (need[process_id][i] > available[i]) { 
+return false; 
+} 
+} 
+return true; 
+} 
+// Function to execute the process and update available resources 
+void execute_process(int process_id) { 
+for (int i = 0; i < MAX_RESOURCES; i++) { 
+available[i] += allocation[process_id][i]; 
+allocation[process_id][i] = 0; 
+need[process_id][i] = 0; 
+} 
+} 
+// Function to accept available resources 
+void accept_available() { 
+printf("Enter available resources:\n"); 
+for (int i = 0; i < MAX_RESOURCES; i++) { 
+scanf("%d", &available[i]); 
+} 
+} 
+// Function to display allocation and max matrices 
+void display_allocation_max() { 
+printf("Allocation Matrix:\n"); 
+for (int i = 0; i < MAX_PROCESSES; i++) { 
+for (int j = 0; j < MAX_RESOURCES; j++) { 
+printf("%d ", allocation[i][j]); 
+} 
+printf("\n"); 
+} 
+printf("\nMax Matrix:\n"); 
+for (int i = 0; i < MAX_PROCESSES; i++) { 
+for (int j = 0; j < MAX_RESOURCES; j++) { 
+printf("%d ", max[i][j]); 
+} 
+printf("\n"); 
+} 
+} 
+// Function to calculate and display the need matrix 
+void display_need() { 
+printf("Need Matrix:\n"); 
+for (int i = 0; i < MAX_PROCESSES; i++) { 
+for (int j = 0; j < MAX_RESOURCES; j++) { 
+need[i][j] = max[i][j] - allocation[i][j]; 
+printf("%d ", need[i][j]); 
+} 
+printf("\n"); 
+} 
+} 
+// Function to display the available resources 
+void display_available() { 
+printf("Available resources: "); 
+for (int i = 0; i < MAX_RESOURCES; i++) { 
+printf("%d ", available[i]); 
+} 
+printf("\n"); 
+} 
+int main() { 
+// Initialize allocation and max matrices based on the snapshot 
+int allocation_snapshot[MAX_PROCESSES][MAX_RESOURCES] = { 
+{0, 3, 2 ,4}, 
+{1 ,2 ,0 ,1}, 
+{0 ,0 ,0 ,0}, 
+{3 ,3 ,2 ,2}, 
+{1 ,4 ,3 ,2}, 
+{2 ,4 ,1 ,4} 
+    }; 
+    int max_snapshot[MAX_PROCESSES][MAX_RESOURCES] = { 
+        {6 ,5 ,4 ,4}, 
+        {4 ,4 ,4 ,4}, 
+        {0 ,0 ,1 ,2}, 
+        {3 ,9 ,3 ,4}, 
+        {2 ,5 ,3 ,3}, 
+        {4 ,6 ,3 ,4} 
+    }; 
+ 
+    // Copy snapshot to allocation and max matrices 
+    for (int i = 0; i < MAX_PROCESSES; i++) { 
+        for (int j = 0; j < MAX_RESOURCES; j++) { 
+            allocation[i][j] = allocation_snapshot[i][j]; 
+            max[i][j] = max_snapshot[i][j]; 
+        } 
+    } 
+ 
+    // Display menu 
+    char choice; 
+    do { 
+        printf("\nBanker's Algorithm Menu:\n"); 
+        printf("a) Accept Available\n"); 
+        printf("b) Display Allocation, Max\n"); 
+        printf("c) Display the contents of need matrix\n"); 
+        printf("d) Display Available\n"); 
+        printf("e) Exit\n"); 
+        printf("Enter your choice: "); 
+        scanf(" %c", &choice); 
+ 
+        switch (choice) { 
+            case 'a': 
+                accept_available(); 
+                break; 
+            case 'b': 
+                display_allocation_max(); 
+                break; 
+            case 'c': 
+                display_need(); 
+                break; 
+            case 'd': 
+                display_available(); 
+                break; 
+            case 'e': 
+                printf("Exiting...\n"); 
+                break; 
+            default: 
+                printf("Invalid choice. Please try again.\n"); 
+        } 
+    } while (choice != 'e'); 
+ 
+    return 0; 
+}
+
+
+
+
+
+
+#include <stdio.h> 
+#include <stdlib.h> 
+// Function to perform SCAN disk scheduling 
+void scanDisk(int diskQueue[], int diskSize, int startHead, char direction) { 
+int totalHeadMovements = 0; 
+int i, j, temp, currentHead, index; 
+// Sort the disk queue in ascending order 
+for (i = 0; i < diskSize - 1; i++) { 
+for (j = 0; j < diskSize - i - 1; j++) { 
+if (diskQueue[j] > diskQueue[j + 1]) { 
+// Swap elements if they are in the wrong order 
+temp = diskQueue[j]; 
+diskQueue[j] = diskQueue[j + 1]; 
+diskQueue[j + 1] = temp; 
+} 
+} 
+} 
+// Find index of current head in the sorted disk queue 
+for (i = 0; i < diskSize; i++) { 
+if (diskQueue[i] >= startHead) { 
+index = i; 
+break; 
+} 
+} 
+printf("Order of disk request serving:\n"); 
+// SCAN algorithm 
+if (direction == 'L') { 
+// Move left 
+for (i = index; i >= 0; i--) { 
+printf("%d ", diskQueue[i]); 
+totalHeadMovements += abs(startHead - diskQueue[i]); 
+startHead = diskQueue[i]; 
+} 
+// Move to the beginning 
+printf("0 "); 
+totalHeadMovements += startHead; 
+// Move right 
+for (i = index + 1; i < diskSize; i++) { 
+            printf("%d ", diskQueue[i]); 
+            totalHeadMovements += abs(startHead - diskQueue[i]); 
+            startHead = diskQueue[i]; 
+        } 
+    } else if (direction == 'R') { 
+        // Move right 
+        for (i = index; i < diskSize; i++) { 
+            printf("%d ", diskQueue[i]); 
+            totalHeadMovements += abs(startHead - diskQueue[i]); 
+            startHead = diskQueue[i]; 
+        } 
+ 
+        // Move to the end 
+        printf("199 "); 
+        totalHeadMovements += 199 - startHead; 
+ 
+        // Move left 
+        for (i = index - 1; i >= 0; i--) { 
+            printf("%d ", diskQueue[i]); 
+            totalHeadMovements += abs(startHead - diskQueue[i]); 
+            startHead = diskQueue[i]; 
+        } 
+    } 
+ 
+    printf("\nTotal number of head movements: %d\n", totalHeadMovements); 
+} 
+ 
+int main() { 
+    int diskSize, startHead, i; 
+    char direction; 
+     
+    printf("Enter the total number of disk blocks: "); 
+    scanf("%d", &diskSize); 
+ 
+    int diskQueue[diskSize]; 
+ 
+    printf("Enter the disk request string:\n"); 
+    for (i = 0; i < diskSize; i++) { 
+        scanf("%d", &diskQueue[i]); 
+    } 
+ 
+    printf("Enter the starting head position: "); 
+    scanf("%d", &startHead); 
+ 
+    printf("Enter the direction (L for Left, R for Right): "); 
+    scanf(" %c", &direction); 
+ 
+    scanDisk(diskQueue, diskSize, startHead, direction); 
+ 
+    return 0; 
+}

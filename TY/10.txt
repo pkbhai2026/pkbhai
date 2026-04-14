@@ -1,0 +1,118 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <mpi.h>
+#define SIZE 1000
+int main(int argc, char *argv[]) {
+    int rank, size;
+    int numbers[SIZE], local_sum = 0, total_sum = 0;
+    float average;
+   
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    // Generate random numbers on the root process
+    if (rank == 0) {
+        for (int i = 0; i < SIZE; i++) {
+            numbers[i] = rand() % 1000;  // Random numbers between 0 and 999
+        }
+    }
+    // Distribute the data among all processes
+    int chunk_size = SIZE / size;
+    int local_numbers[chunk_size];
+    MPI_Scatter(numbers, chunk_size, MPI_INT, local_numbers, chunk_size, MPI_INT, 
+0, MPI_COMM_WORLD);
+    // Calculate local sum
+    for (int i = 0; i < chunk_size; i++) {
+        local_sum += local_numbers[i];
+    }
+    // Reduce the local sums to compute the total sum
+    MPI_Reduce(&local_sum, &total_sum, 1, MPI_INT, MPI_SUM, 0, 
+MPI_COMM_WORLD);
+    // Calculate average on the root process
+    if (rank == 0) {
+        average = (float)total_sum / SIZE;
+        printf("Total Sum: %d\n", total_sum);
+        printf("Average: %.2f\n", average);
+    }
+    MPI_Finalize();
+    return 0;
+}
+
+
+
+
+
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+void sortRequests(int requests[], int n) {
+    int temp;
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (requests[i] > requests[j]) {
+                temp = requests[i];
+                requests[i] = requests[j];
+                requests[j] = temp;
+            }
+        }
+    }
+}
+void cscan(int requests[], int n, int head, int total_blocks, int direction) {
+    int total_head_movements = 0;
+    int served[n];
+    for (int i = 0; i < n; i++) {
+        served[i] = 0;
+    }
+    sortRequests(requests, n);
+   
+    int left[n], right[n], left_count = 0, right_count = 0;
+    for (int i = 0; i < n; i++) {
+        if (requests[i] < head) {
+            left[left_count++] = requests[i];
+        } else {
+            right[right_count++] = requests[i];
+        }
+    }
+    if (direction == 0) {
+        for (int i = left_count - 1; i >= 0; i--) {
+            total_head_movements += abs(head - left[i]);
+            head = left[i];
+            printf("%d ", head);
+        }
+        total_head_movements += abs(head - 0);
+        head = 0;
+        for (int i = 0; i < right_count; i++) {
+            total_head_movements += abs(head - right[i]);
+            head = right[i];
+            printf("%d ", head);
+        }
+    } else {
+        for (int i = 0; i < right_count; i++) {
+            total_head_movements += abs(head - right[i]);
+            head = right[i];
+            printf("%d ", head);
+        }
+        total_head_movements += abs(head - (total_blocks - 1));
+        head = total_blocks - 1;
+        for (int i = left_count - 1; i >= 0; i--) {
+            total_head_movements += abs(head - left[i]);
+            head = left[i];
+            printf("%d ", head);
+        }
+    }
+    printf("\nTotal head movements: %d\n", total_head_movements);
+}
+int main() {
+    int requests[] = {33, 99, 142, 52, 197, 79, 46, 65};
+    int n = sizeof(requests) / sizeof(requests[0]);
+    int head, direction;
+    printf("Enter the starting head posSition: ");
+    scanf("%d", &head);
+    printf("Enter the direction (0 for left, 1 for right): ");
+    scanf("%d", &direction);
+    cscan(requests, n, head, 200, direction);
+    return 0;
+}

@@ -1,0 +1,134 @@
+#include <stdio.h> 
+#include <stdlib.h> 
+// Function to sort an array 
+void sort(int arr[], int n) { 
+int i, j, temp; 
+for (i = 0; i < n-1; i++) { 
+for (j = 0; j < n-i-1; j++) { 
+if (arr[j] > arr[j+1]) { 
+temp = arr[j]; 
+arr[j] = arr[j+1]; 
+arr[j+1] = temp; 
+} 
+} 
+} 
+} 
+// Function to simulate SCAN disk scheduling algorithm 
+void scan_algorithm(int requests[], int n, int head_position, char direction) { 
+int total_head_movements = 0; 
+int serving_order[n]; 
+int serving_index = 0; 
+// Sort the requests 
+sort(requests, n); 
+// Serve requests based on direction 
+if (direction == 'l' || direction == 'L') { 
+// Serve requests to the left of head position 
+for (int i = n - 1; i >= 0; i--) { 
+if (requests[i] <= head_position) { 
+total_head_movements += abs(head_position - requests[i]); 
+head_position = requests[i]; 
+serving_order[serving_index++] = head_position; 
+} 
+} 
+// Serve requests to the right 
+for (int i = 0; i < n; i++) { 
+            if (requests[i] >= head_position) { 
+                total_head_movements += abs(head_position - requests[i]); 
+                head_position = requests[i]; 
+                serving_order[serving_index++] = head_position; 
+            } 
+        } 
+    } else if (direction == 'r' || direction == 'R') { 
+        // Serve requests to the right of head position 
+        for (int i = 0; i < n; i++) { 
+            if (requests[i] >= head_position) { 
+                total_head_movements += abs(head_position - requests[i]); 
+                head_position = requests[i]; 
+                serving_order[serving_index++] = head_position; 
+            } 
+        } 
+        // Serve requests to the left 
+        for (int i = n - 1; i >= 0; i--) { 
+            if (requests[i] < head_position) { 
+                total_head_movements += abs(head_position - requests[i]); 
+                head_position = requests[i]; 
+                serving_order[serving_index++] = head_position; 
+            } 
+        } 
+    } 
+ 
+    // Print serving order 
+    printf("Order of service: "); 
+    for (int i = 0; i < serving_index; i++) { 
+        printf("%d ", serving_order[i]); 
+    } 
+    printf("\n"); 
+ 
+    // Print total number of head movements 
+    printf("Total number of head movements: %d\n", total_head_movements); 
+} 
+ 
+int main() { 
+    int n; 
+    printf("Enter total number of disk blocks: "); 
+    scanf("%d", &n); 
+ 
+    int requests[n]; 
+    printf("Enter disk request string (comma-separated numbers): "); 
+    for (int i = 0; i < n; i++) { 
+        scanf("%d", &requests[i]); 
+    } 
+ 
+    int head_position; 
+    printf("Enter starting head position: "); 
+    scanf("%d", &head_position); 
+ 
+    char direction; 
+printf("Enter direction (left/l or right/r): "); 
+scanf(" %c", &direction); 
+// Call SCAN algorithm function 
+scan_algorithm(requests, n, head_position, direction); 
+return 0; 
+}
+
+
+
+
+
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <mpi.h> 
+#define ARRAY_SIZE 1000 
+int main(int argc, char *argv[]) { 
+int rank, size; 
+int i; 
+int local_max = 0, global_max = 0; 
+MPI_Init(&argc, &argv); 
+MPI_Comm_rank(MPI_COMM_WORLD, &rank); 
+MPI_Comm_size(MPI_COMM_WORLD, &size); 
+// Seed for random number generation based on rank 
+srand(rank); 
+// Generate local random numbers 
+int local_numbers[ARRAY_SIZE / size]; 
+for (i = 0; i < ARRAY_SIZE / size; i++) { 
+local_numbers[i] = rand() % 100; 
+} 
+// Find local max 
+for (i = 0; i < ARRAY_SIZE / size; i++) { 
+if (local_numbers[i] > local_max) { 
+local_max = local_numbers[i]; 
+} 
+} 
+// Find the global max using MPI_Reduce 
+MPI_Reduce(&local_max, &global_max, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD); 
+// Print results on rank 0 
+if (rank == 0) { 
+printf("Local max on each process:\n"); 
+for (i = 0; i < size; i++) { 
+printf("Process %d: %d\n", i, local_max); 
+} 
+} 
+printf("\nGlobal max: %d\n", global_max); 
+MPI_Finalize(); 
+return 0; 
+} 

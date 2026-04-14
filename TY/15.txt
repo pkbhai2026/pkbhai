@@ -1,0 +1,161 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#define MAX_FILES 10
+#define MAX_BLOCKS 100
+int bitVector[MAX_BLOCKS];
+int directory[MAX_FILES][MAX_BLOCKS];
+int fileStart[MAX_FILES];
+int fileCount = 0;
+void initializeDisk(int n) {
+    srand(time(0));
+    for (int i = 0; i < n; i++) {
+        bitVector[i] = rand() % 2;
+    }
+}
+void showBitVector(int n) {
+    printf("Bit Vector: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", bitVector[i]);
+    }
+    printf("\n");
+}
+void createNewFile(int n) {
+    if (fileCount >= MAX_FILES) {
+        printf("Directory full! Cannot create more files.\n");
+        return;
+    }
+    int fileSize, block, currentBlock = -1, previousBlock = -1;
+    printf("Enter file size: ");
+    scanf("%d", &fileSize);
+    if (fileSize > n) {
+        printf("File size too large.\n");
+        return;
+    }
+    fileStart[fileCount] = -1;
+    for (int i = 0; i < fileSize; i++) {
+        do {
+            block = rand() % n;
+        } while (bitVector[block] != 0);
+        bitVector[block] = 1;
+        if (previousBlock == -1) {
+            fileStart[fileCount] = block;
+        } else {
+            directory[fileCount][previousBlock] = block;
+        }
+        previousBlock = block;
+        directory[fileCount][block] = -1;
+    }
+    printf("File created with starting block %d\n", fileStart[fileCount]);
+    fileCount++;
+}
+void showDirectory() {
+    printf("Directory:\n");
+    for (int i = 0; i < fileCount; i++) {
+        printf("File %d: ", i + 1);
+        int block = fileStart[i];
+        while (block != -1) {
+            printf("%d -> ", block);
+            block = directory[i][block];
+        }
+        printf("NULL\n");
+    }
+}
+int main() {
+    int n, choice;
+    printf("Enter total number of blocks: ");
+    scanf("%d", &n);
+    initializeDisk(n);
+    while (1) {
+        printf("\nMenu:\n");
+        printf("1. Show Bit Vector\n");
+        printf("2. Create New File\n");
+        printf("3. Show Directory\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+        switch (choice) {
+            case 1:
+                showBitVector(n);
+                break;
+            case 2:
+                createNewFile(n);
+                break;
+            case 3:
+                showDirectory();
+                break;
+            case 4:
+                exit(0);
+            default:
+                printf("Invalid choice!\n");
+        }
+    }
+    return 0;
+}
+
+
+
+
+
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+void sortRequests(int requests[], int n) {
+    int temp;
+    for (int i = 0; i < n-1; i++) {
+        for (int j = i+1; j < n; j++) {
+            if (requests[i] > requests[j]) {
+                temp = requests[i];
+                requests[i] = requests[j];
+                requests[j] = temp;
+            }
+        }
+    }
+}
+void cscan(int requests[], int n, int head, int diskSize, char direction) {
+    int totalHeadMovements = 0;
+    int index = 0;
+    int servedRequests[n];
+   
+    sortRequests(requests, n);
+   
+    if (direction == 'R') {
+        for (int i = 0; i < n; i++) {
+            if (requests[i] >= head) {
+                index = i;
+                break;
+            }
+        }
+       
+        for (int i = index; i < n; i++) {
+            servedRequests[i - index] = requests[i];
+        }
+       
+        for (int i = 0; i < index; i++) {
+            servedRequests[n - index + i] = requests[i];
+        }
+       
+        totalHeadMovements += (diskSize - 1 - head) + (diskSize - 1) - servedRequests[n
+1];
+       
+        printf("Requests in the order they are served:\n");
+        for (int i = 0; i < n; i++) {
+            printf("%d ", servedRequests[i]);
+        }
+    }
+    printf("\nTotal head movements: %d\n", totalHeadMovements);
+}
+int main() {
+    int requests[] = {80, 150, 60, 135, 40, 35, 170};
+    int n = sizeof(requests) / sizeof(requests[0]);
+    int head, diskSize = 200;
+    char direction;
+    printf("Enter the starting head position: ");
+    scanf("%d", &head);
+    printf("Enter the direction (R for Right, L for Left): ");
+    scanf(" %c", &direction);
+    cscan(requests, n, head, diskSize, direction);
+    return 0;
+}
